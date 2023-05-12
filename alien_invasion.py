@@ -27,6 +27,8 @@ class AlienInvasion:
         while True:
             #监视键盘和鼠标事件。
             self._check_events()
+            #更新位置
+            self.ship.update()
             #更新屏幕
             self._update_screen()
     
@@ -35,6 +37,12 @@ class AlienInvasion:
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        self.ship.moving_right = True
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_RIGHT:
+                        self.ship.moving_right = False
     
     def _update_screen(self):
         """更新屏幕上的图像，并切换到新的屏幕"""
