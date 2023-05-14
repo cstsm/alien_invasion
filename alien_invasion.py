@@ -2,6 +2,7 @@ import sys
 import pygame
 from settings import Settings
 from ship import Ship
+from bullet import Bullet
 
 class AlienInvasion:
     """管理游戏资源和行为的类"""
@@ -14,10 +15,13 @@ class AlienInvasion:
         self.screen = pygame.display.set_mode(
             (self.settings.screen_width,self.settings.screen_height)
         )
+        
         pygame.display.set_caption("Alien Invasion")
 
         #飞船
         self.ship = Ship(self)
+        #子弹
+        self.bullets = pygame.sprite.Group()
 
         #设置背景色。
         self.bg_color = (self.settings.bg_color)
@@ -27,28 +31,71 @@ class AlienInvasion:
         while True:
             #监视键盘和鼠标事件。
             self._check_events()
-            #更新位置
+            #更新飞船位置
             self.ship.update()
+            #更新子弹
+            self._update_bullets()
+
             #更新屏幕
-            self._update_screen()
+            self._update_screen() 
     
     def _check_events(self):
         """响应按键和鼠标事件。"""
         for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RIGHT:
-                        self.ship.moving_right = True
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RIGHT:
-                        self.ship.moving_right = False
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                self._check_keydown_events(event)
+            elif event.type == pygame.KEYUP:
+                self._check_keyup_events(event)
     
+    def _check_keydown_events(self,event):
+        """响应按键。"""
+        if event.key == pygame.K_RIGHT:
+            self.ship.moving_right = True
+        elif event.key == pygame.K_LEFT:
+            self.ship.moving_left = True
+        elif event.key == pygame.K_UP:
+            self.ship.moving_up = True
+        elif event.key == pygame.K_DOWN:
+            self.ship.moving_down = True
+        elif event.key == pygame.K_q:
+            sys.exit()
+        elif event.key == pygame.K_SPACE:
+            self._fire_bullet()
+    def _check_keyup_events(self,event):
+        """响应松开。"""
+        if event.key == pygame.K_RIGHT:
+            self.ship.moving_right = False
+        elif event.key == pygame.K_LEFT:
+            self.ship.moving_left = False
+        elif event.key == pygame.K_UP:
+            self.ship.moving_up = False
+        elif event.key == pygame.K_DOWN:
+            self.ship.moving_down = False
+    
+    def _fire_bullet(self):
+        """创建一颗子弹,并将其加入到编组bullets中"""
+        if len(self.bullets) < self.settings.bullet_allowed:
+            new_bullet = Bullet(self)
+            self.bullets.add(new_bullet)
+    
+    def _update_bullets(self):
+        """更新子弹的位置并删除消失的子弹"""
+        #更新子弹的位置
+        self.bullets.update()
+            #删除超出屏幕的子弹
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)
+
     def _update_screen(self):
         """更新屏幕上的图像，并切换到新的屏幕"""
         #每次循环时都重绘屏幕
-        self.screen.fill(self.bg_color)
-        self.ship.blitme()
+        self.screen.fill(self.bg_color)             #填充背景
+        self.ship.blitme()                          #绘制飞船
+        for bullet in self.bullets.sprites():       #绘制子弹
+            bullet.draw_bullet()
 
         #让最近绘制的屏幕可见。
         pygame.display.flip()
