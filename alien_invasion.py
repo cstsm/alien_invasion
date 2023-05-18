@@ -3,6 +3,7 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
 
 class AlienInvasion:
     """管理游戏资源和行为的类"""
@@ -22,6 +23,10 @@ class AlienInvasion:
         self.ship = Ship(self)
         #子弹
         self.bullets = pygame.sprite.Group()
+        #外星人
+        self.aliens = pygame.sprite.Group()
+        #辅助函数，创建外星人
+        self._create_fleet()
 
         #设置背景色。
         self.bg_color = (self.settings.bg_color)
@@ -88,6 +93,25 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+    
+    def _create_fleet(self):
+        """创建外星人群。"""
+        #创建一个外星人并计算一行可容纳多少个外星人
+        #外星人的间距为外星人的宽度
+        alien = Alien(self)
+        alien_width = alien.rect.width
+        available_space_x = self.settings.screen_width - (2*alien_width)
+        number_aliens_x = available_space_x // (2*alien_width)
+
+        #创建第一行外星人
+        for alien_number in range(number_aliens_x):
+            #创建一个外星人并将其加入到当前行
+            alien = Alien(self)
+            alien.x = alien_width + 2*alien_width*alien_number
+            alien.rect.x = alien.x
+            # alien.rect.y = 0
+            self.aliens.add(alien)
+
 
     def _update_screen(self):
         """更新屏幕上的图像，并切换到新的屏幕"""
@@ -96,6 +120,7 @@ class AlienInvasion:
         self.ship.blitme()                          #绘制飞船
         for bullet in self.bullets.sprites():       #绘制子弹
             bullet.draw_bullet()
+        self.aliens.draw(self.screen)               #外星人
 
         #让最近绘制的屏幕可见。
         pygame.display.flip()
